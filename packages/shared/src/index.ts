@@ -1,0 +1,5 @@
+export * from './lib/cpf'
+export * from './schemas/customer'
+// export * from './schemas/color'
+// export * from './schemas/auth'
+export * from './schemas/common'
