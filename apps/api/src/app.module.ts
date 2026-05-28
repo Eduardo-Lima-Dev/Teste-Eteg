@@ -1,14 +1,19 @@
-import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { CustomersModule } from './customers/customers.module';
-import { ColorsModule } from './colors/colors.module';
-import { AuthModule } from './auth/auth.module';
-import { HealthModule } from './health/health.module';
+import { Module } from '@nestjs/common'
+import { ConfigModule } from '@nestjs/config'
+import { PrismaModule } from './prisma/prisma.module'
+import { CustomersModule } from './customers/customers.module'
+import { ColorsModule } from './colors/colors.module'
+import { AuthModule } from './auth/auth.module'
+import { HealthModule } from './health/health.module'
 
 @Module({
-  imports: [CustomersModule, ColorsModule, AuthModule, HealthModule],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    PrismaModule,
+    CustomersModule,
+    ColorsModule,
+    AuthModule,
+    HealthModule,
+  ],
 })
 export class AppModule {}
