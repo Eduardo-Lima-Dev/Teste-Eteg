@@ -1,26 +1,51 @@
-import { Injectable } from '@nestjs/common';
-import { CreateCustomerDto } from './dto/create-customer.dto';
-import { UpdateCustomerDto } from './dto/update-customer.dto';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common'
+import { PrismaService } from '../prisma/prisma.service'
+import { CreateCustomerDto } from './dto/create-customer.dto'
+import { Prisma } from '../generated/prisma/client'
 
 @Injectable()
 export class CustomersService {
-  create(createCustomerDto: CreateCustomerDto) {
-    return 'This action adds a new customer';
+  constructor(private prisma: PrismaService) {}
+
+  async findAll(search?: string) {
+    return this.prisma.customer.findMany({
+      where: search
+        ? {
+          OR: [
+            { name: { contains: search, mode: 'insensitive' }},
+            { cpf: { contains: search }},
+            { email: { contains: search, mode: 'insensitive' }}
+          ],
+        }
+      : undefined,
+    include: { color: true },
+    orderBy: { createdAt: 'desc' } 
+    })
   }
 
-  findAll() {
-    return `This action returns all customers`;
+  async findOne(id: number) {
+    const customer = await this.prisma.customer.findUnique({ 
+      where: { id },
+      include: { color: true }
+    })
+    if (!customer) throw new NotFoundException('Cliente não encontrado')
+    return customer
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} customer`;
-  }
-
-  update(id: number, updateCustomerDto: UpdateCustomerDto) {
-    return `This action updates a #${id} customer`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} customer`;
+  async create(dto: CreateCustomerDto) {
+    try {
+      return await this.prisma.customer.create({
+        data: dto,
+        include: { color: true }
+      })
+    } catch (e) {
+      if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+        const field = (e.meta?.target as string[])?.[0]
+        throw new ConflictException(
+          field === 'cpf' ? 'CPF já cadastrado' : 'E-mail já cadastrado'
+        )
+      }
+      throw e
+    }
   }
 }
