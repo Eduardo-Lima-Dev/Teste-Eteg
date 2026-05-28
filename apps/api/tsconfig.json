@@ -7,7 +7,7 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "paths": {
-      "@teste-eteg/shared": ["../../packages/shared/src/index.ts"]
+      "@teste-eteg/shared": ["../../packages/shared/dist/index"]
     }
   },
   "include": ["src/**/*"],
