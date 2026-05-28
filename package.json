@@ -2,7 +2,6 @@
     "name": "teste-eteg",
     "private": true,
     "packageManager": "pnpm@11.4.0",
-
     "scripts": {
         "dev": "turbo run dev",
         "build": "turbo run build",
