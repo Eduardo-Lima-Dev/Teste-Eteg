@@ -1,34 +1,44 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { ColorsService } from './colors.service';
-import { CreateColorDto } from './dto/create-color.dto';
-import { UpdateColorDto } from './dto/update-color.dto';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  ParseIntPipe,
+  Delete as HttpDelete,
+} from '@nestjs/common'
+import { ColorsService } from './colors.service'
+import { CreateColorDto } from './dto/create-color.dto'
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard'
 
 @Controller('colors')
 export class ColorsController {
   constructor(private readonly colorsService: ColorsService) {}
 
-  @Post()
-  create(@Body() createColorDto: CreateColorDto) {
-    return this.colorsService.create(createColorDto);
-  }
-
   @Get()
-  findAll() {
-    return this.colorsService.findAll();
+  findAll(
+    @Query('page', new ParseIntPipe({ optional: true })) page?: number,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
+  ) {
+    return this.colorsService.findAll(page, limit)
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.colorsService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.colorsService.findOne(id)
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateColorDto: UpdateColorDto) {
-    return this.colorsService.update(+id, updateColorDto);
+  @Post()
+  @UseGuards(JwtAuthGuard)
+  create(@Body() dto: CreateColorDto) {
+    return this.colorsService.create(dto)
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.colorsService.remove(+id);
+  @HttpDelete(':id')
+  @UseGuards(JwtAuthGuard)
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.colorsService.remove(id)
   }
 }
