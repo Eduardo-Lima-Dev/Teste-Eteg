@@ -23,6 +23,7 @@ services:
     build:
       context: .
       dockerfile: apps/api/Dockerfile
+    image: 951322694781.dkr.ecr.us-east-2.amazonaws.com/teste-eteg-api:latest
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       PORT: 3333
@@ -56,6 +57,7 @@ services:
       dockerfile: apps/web/Dockerfile
       args:
         VITE_API_URL: /api
+    image: 951322694781.dkr.ecr.us-east-2.amazonaws.com/teste-eteg-web:latest
     depends_on:
       api:
         condition: service_healthy
