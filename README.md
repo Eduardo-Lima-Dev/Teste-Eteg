@@ -270,10 +270,6 @@ Os schemas de validação vivem em `packages/shared` e são importados tanto pel
 
 O token de autenticação é armazenado em um cookie `httpOnly`, inacessível via `document.cookie` ou `localStorage`. Isso elimina a classe inteira de ataques XSS que roubam tokens de autenticação. O cookie é enviado automaticamente pelo navegador em cada requisição protegida.
 
-### Validação matemática de CPF
-
-A validação em `packages/shared/src/lib/cpf.ts` implementa o algoritmo real de dígitos verificadores. Um CPF como `111.111.111-11` passa na validação de formato mas falha na validação matemática — e é rejeitado corretamente pelo sistema.
-
 ### Nginx como reverse proxy
 
 Em produção, o React é uma SPA estática servida pelo Nginx. O mesmo servidor faz proxy de `/api/` para o backend na porta 3333. Com isso, frontend e API respondem na mesma origem, eliminando a necessidade de configuração de CORS em produção.
