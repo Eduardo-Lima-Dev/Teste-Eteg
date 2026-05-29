@@ -102,7 +102,7 @@ export default function LoginPage() {
             </div>
 
             <p className="text-center mt-4 text-[12.5px] text-ink-3">
-                Protegido por autenticação · Admin Suite © 2026
+                Desenvolvido por Eduardo © 2026
             </p>
         </CenteredScreen>
     )
