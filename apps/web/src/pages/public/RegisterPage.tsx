@@ -90,7 +90,7 @@ export default function RegisterPage() {
 
             <div className="bg-surface rounded-2xl border border-border-soft shadow-card overflow-hidden">
                 {/* Card header with subtle gradient */}
-                <div className="px-8 pt-7 pb-5 border-b border-border-soft"
+                <div className="px-5 sm:px-8 pt-7 pb-5 border-b border-border-soft"
                     style={{ background: 'linear-gradient(180deg, #f7f9fc 0%, #ffffff 100%)' }}>
                     <h1 className="text-[22px] font-extrabold text-ink">Cadastro de Cliente</h1>
                     <p className="text-[13.5px] text-ink-3 mt-1">
@@ -99,7 +99,7 @@ export default function RegisterPage() {
                 </div>
 
                 {/* Card body */}
-                <div className="px-8 py-7">
+                <div className="px-5 sm:px-8 py-7">
                     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-[18px]">
                         <Field label="Nome completo" required htmlFor="name" error={errors.name?.message}>
                             <IconInput
@@ -110,7 +110,7 @@ export default function RegisterPage() {
                             />
                         </Field>
 
-                        <div className="grid grid-cols-2 gap-3.5">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                             <Field label="CPF" required htmlFor="cpf" error={errors.cpf?.message}>
                                 <IconInput
                                     id="cpf"

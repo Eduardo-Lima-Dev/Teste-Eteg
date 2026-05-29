@@ -107,15 +107,17 @@ export default function AdminHomePage() {
                 }
             />
 
-            <div className="flex-1 overflow-y-auto p-[26px_32px_40px]">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-[26px_32px_40px]">
                 <div className="max-w-[1180px] mx-auto">
 
                     {/* Stats + Search */}
-                    <div className="flex items-center gap-3 mb-5">
-                        <StatPill value={total} label="Clientes cadastrados" />
-                        <StatPill value={uniqueColors.size} label="Cores disponíveis" />
-                        <StatPill value={recentCount} label="Cadastros esta semana" />
-                        <div className="flex-1 max-w-[360px] ml-auto">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-5">
+                        <div className="grid grid-cols-3 gap-3 sm:contents">
+                            <StatPill value={total} label="Clientes cadastrados" />
+                            <StatPill value={uniqueColors.size} label="Cores disponíveis" />
+                            <StatPill value={recentCount} label="Cadastros esta semana" />
+                        </div>
+                        <div className="w-full sm:max-w-[360px] sm:ml-auto">
                             <IconInput
                                 icon={Search}
                                 placeholder="Buscar por nome, CPF ou e-mail…"
