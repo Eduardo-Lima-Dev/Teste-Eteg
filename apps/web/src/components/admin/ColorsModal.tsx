@@ -30,7 +30,7 @@ export default function ColorsModal({ onClose }: { onClose: () => void }) {
             const { data } = await api.get('/colors')
             setColors(data)
         } catch {
-            toast.error('Erro ao carregar cores')
+            toast.error('Falha ao carregar cores')
         }
     }, [])
 
@@ -41,12 +41,12 @@ export default function ColorsModal({ onClose }: { onClose: () => void }) {
         setLoading(true)
         try {
             await api.post('/colors', { name, hexCode })
-            toast.success('Cor criada com sucesso')
+            toast.success('Cor adicionada')
             setName('')
             setHexCode('#000000')
             fetchColors()
         } catch {
-            toast.error('Erro ao criar cor')
+            toast.error('Falha ao adicionar cor')
         } finally {
             setLoading(false)
         }
@@ -58,7 +58,7 @@ export default function ColorsModal({ onClose }: { onClose: () => void }) {
             toast.success('Cor removida')
             fetchColors()
         } catch {
-            toast.error('Não foi possível remover a cor')
+            toast.error('Falha ao remover cor')
         }
     }
 

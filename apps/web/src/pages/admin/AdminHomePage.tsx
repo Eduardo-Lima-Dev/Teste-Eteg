@@ -68,7 +68,7 @@ export default function AdminHomePage() {
 
     async function handleLogout() {
         await api.post('/auth/logout')
-        toast.success('Logout realizado com sucesso')
+        toast.success('Sessão encerrada')
         navigate('/admin/login')
     }
 

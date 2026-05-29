@@ -52,7 +52,7 @@ export default function RegisterPage() {
                 const data = r.data?.data ?? r.data
                 setColors(Array.isArray(data) ? data : [])
             })
-            .catch(() => toast.error('Erro ao carregar cores'))
+            .catch(() => toast.error('Falha ao carregar cores'))
     }, [])
 
     async function onSubmit(data: CreateCustomerInput) {

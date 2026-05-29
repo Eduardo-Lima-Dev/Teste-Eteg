@@ -8,6 +8,6 @@ import './index.css'
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <RouterProvider router={router} />
-    <Toaster richColors position="top-right"/>
+    <Toaster position="bottom-right" />
   </StrictMode>,
 )
