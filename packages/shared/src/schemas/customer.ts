@@ -24,6 +24,7 @@ export const customerResponseSchema = z.object({
     color: z.object({
         id: z.number(),
         name: z.string(),
+        hexCode: z.string(),
         createdAt: z.string().datetime(),
     })
 })
