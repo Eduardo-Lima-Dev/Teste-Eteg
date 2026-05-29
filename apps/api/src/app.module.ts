@@ -1,5 +1,7 @@
 import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler'
+import { APP_GUARD } from '@nestjs/core'
 import { PrismaModule } from './prisma/prisma.module'
 import { CustomersModule } from './customers/customers.module'
 import { ColorsModule } from './colors/colors.module'
@@ -9,11 +11,29 @@ import { HealthModule } from './health/health.module'
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ThrottlerModule.forRoot([
+      {
+        name: 'global',
+        ttl: 60_000,
+        limit: 100,
+      },
+      {
+        name: 'login',
+        ttl: 60_000,
+        limit: 5,
+      },
+    ]),
     PrismaModule,
     CustomersModule,
     ColorsModule,
     AuthModule,
     HealthModule,
+  ],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
   ],
 })
 export class AppModule {}

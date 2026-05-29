@@ -1,9 +1,9 @@
-import { Controller, Post, Body, Res, HttpCode, UseGuards, Req } from '@nestjs/common'
-import { Response, Request } from 'express'
+import { Controller, Post, Body, Res, HttpCode, UseGuards } from '@nestjs/common'
+import { Response } from 'express'
+import { Throttle } from '@nestjs/throttler'
 import { AuthService } from './auth.service'
 import { LoginDto } from './dto/login.dto'
 import { JwtAuthGuard } from './guards/jwt-auth.guard'
-import { email } from 'zod/v4/core/regexes'
 
 @Controller('auth')
 export class AuthController {
@@ -11,6 +11,7 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(200)
+  @Throttle({ login: { ttl: 60_000, limit: 5 } })
   async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
     const token = await this.authService.login(dto.email, dto.password)
 
