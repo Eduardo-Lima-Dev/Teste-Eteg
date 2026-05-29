@@ -5,22 +5,18 @@ import { toast } from 'sonner'
 import { createCustomerSchema, type CreateCustomerInput } from '@teste-eteg/shared'
 import { api } from '@/lib/api'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { resolve } from "path"
+import { User, IdCard, Mail, CheckCircle } from 'lucide-react'
+import CenteredScreen from '@/components/layout/CenteredScreen'
+import BrandLogo from '@/components/brand/BrandLogo'
+import Field from '@/components/ui/field'
+import IconInput from '@/components/ui/icon-input'
+import ColorSelect from '@/components/ui/color-select'
 
-type Color = { 
+type Color = {
     id: number;
     name: string;
-    hexCode: string; 
+    hexCode: string;
 }
 
 function formatCpf(value: string) {
@@ -40,21 +36,23 @@ export default function RegisterPage() {
         register,
         handleSubmit,
         setValue,
+        watch,
         formState: { errors, isSubmitting }
     } = useForm<CreateCustomerInput>({
         resolver: zodResolver(createCustomerSchema),
     })
 
+    const selectedColorId = watch('colorId')
+
     useEffect(() => {
         api
             .get('/colors')
             .then((r) => {
-            const data = r.data?.data ?? r.data
-            setColors(Array.isArray(data) ? data : [])
+                const data = r.data?.data ?? r.data
+                setColors(Array.isArray(data) ? data : [])
             })
             .catch(() => toast.error('Erro ao carregar cores'))
     }, [])
-
 
     async function onSubmit(data: CreateCustomerInput) {
         try {
@@ -68,80 +66,100 @@ export default function RegisterPage() {
 
     if (submitted) {
         return (
-            <div className="flex min-h-screen items-center justify-center">
-                <div className="text-center space-y-2">
-                    <h1 className="text-2xl font-bold text-green-600">Cadastro realizado!</h1>
-                    <p className="text-muted-foreground">Seus dados foram enviados com sucesso.</p>
+            <CenteredScreen maxWidth={480}>
+                <div className="flex flex-col items-center mb-6">
+                    <BrandLogo subtitle="CADASTRO PÚBLICO" />
                 </div>
-            </div>
+                <div className="bg-surface rounded-2xl border border-border-soft shadow-card p-10 text-center space-y-3">
+                    <div className="flex justify-center">
+                        <CheckCircle className="h-12 w-12 text-ok" />
+                    </div>
+                    <h1 className="text-[22px] font-extrabold text-ink">Cadastro realizado!</h1>
+                    <p className="text-[14px] text-ink-3">Seus dados foram enviados com sucesso.</p>
+                </div>
+            </CenteredScreen>
         )
     }
 
     return (
-    <div className="flex min-h-screen items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">Cadastro de Cliente</h1>
-          <p className="text-muted-foreground text-sm">Preencha seus dados abaixo.</p>
-        </div>
+        <CenteredScreen maxWidth={480}>
+            <div className="flex flex-col items-center mb-6">
+                <BrandLogo subtitle="CADASTRO PÚBLICO" />
+            </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-1">
-            <Label htmlFor="name">Nome completo *</Label>
-            <Input id="name" {...register('name')} />
-            {errors.name && <p className="text-sm text-red-500">{errors.name.message}</p>}
-          </div>
+            <div className="bg-surface rounded-2xl border border-border-soft shadow-card overflow-hidden">
+                {/* Card header with subtle gradient */}
+                <div className="px-8 pt-7 pb-5 border-b border-border-soft"
+                    style={{ background: 'linear-gradient(180deg, #f7f9fc 0%, #ffffff 100%)' }}>
+                    <h1 className="text-[22px] font-extrabold text-ink">Cadastro de Cliente</h1>
+                    <p className="text-[13.5px] text-ink-3 mt-1">
+                        Preencha seus dados abaixo. Campos com <span className="text-danger">*</span> são obrigatórios.
+                    </p>
+                </div>
 
-          <div className="space-y-1">
-            <Label htmlFor="cpf">CPF *</Label>
-            <Input
-              id="cpf"
-              placeholder="000.000.000-00"
-              {...register('cpf')}
-              onChange={(e) => setValue('cpf', formatCpf(e.target.value))}
-            />
-            {errors.cpf && <p className="text-sm text-red-500">{errors.cpf.message}</p>}
-          </div>
+                {/* Card body */}
+                <div className="px-8 py-7">
+                    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-[18px]">
+                        <Field label="Nome completo" required htmlFor="name" error={errors.name?.message}>
+                            <IconInput
+                                id="name"
+                                icon={User}
+                                placeholder="Seu nome completo"
+                                {...register('name')}
+                            />
+                        </Field>
 
-          <div className="space-y-1">
-            <Label htmlFor="email">E-mail *</Label>
-            <Input id="email" type="email" {...register('email')} />
-            {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
-          </div>
+                        <div className="grid grid-cols-2 gap-3.5">
+                            <Field label="CPF" required htmlFor="cpf" error={errors.cpf?.message}>
+                                <IconInput
+                                    id="cpf"
+                                    icon={IdCard}
+                                    mono
+                                    placeholder="000.000.000-00"
+                                    {...register('cpf')}
+                                    onChange={(e) => setValue('cpf', formatCpf(e.target.value))}
+                                />
+                            </Field>
 
-          <div className="space-y-1">
-            <Label>Cor preferida *</Label>
-            <Select onValueChange={(v) => setValue('colorId', Number(v))}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione uma cor" />
-              </SelectTrigger>
-              <SelectContent>
-                {colors.map((c) => (
-                  <SelectItem key={c.id} value={String(c.id)}>
-                    <span className="flex items-center gap-2">
-                      <span
-                        className="inline-block h-3 w-3 rounded-full border"
-                        style={{ backgroundColor: c.hexCode }}
-                      />
-                      {c.name}
-                    </span>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.colorId && <p className="text-sm text-red-500">{errors.colorId.message}</p>}
-          </div>
+                            <Field label="Cor preferida" required error={errors.colorId?.message}>
+                                <ColorSelect
+                                    colors={colors}
+                                    value={selectedColorId}
+                                    onChange={(id) => setValue('colorId', id, { shouldValidate: true })}
+                                />
+                            </Field>
+                        </div>
 
-          <div className="space-y-1">
-            <Label htmlFor="observations">Observações</Label>
-            <Textarea id="observations" rows={3} {...register('observations')} />
-          </div>
+                        <Field label="E-mail" required htmlFor="email" error={errors.email?.message}>
+                            <IconInput
+                                id="email"
+                                icon={Mail}
+                                type="email"
+                                placeholder="voce@email.com"
+                                {...register('email')}
+                            />
+                        </Field>
 
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
-            {isSubmitting ? 'Enviando...' : 'Enviar cadastro'}
-          </Button>
-        </form>
-      </div>
-    </div>
-  )
+                        <Field label="Observações" htmlFor="observations">
+                            <Textarea
+                                id="observations"
+                                rows={4}
+                                placeholder="Algo que devemos saber? (opcional)"
+                                className="border-border-strong text-[14.5px] resize-none"
+                                {...register('observations')}
+                            />
+                        </Field>
+
+                        <Button
+                            type="submit"
+                            className="w-full h-[46px] bg-brand hover:bg-brand-hover text-white font-semibold text-[14.5px] mt-1"
+                            disabled={isSubmitting}
+                        >
+                            {isSubmitting ? 'Enviando...' : 'Enviar cadastro'}
+                        </Button>
+                    </form>
+                </div>
+            </div>
+        </CenteredScreen>
+    )
 }

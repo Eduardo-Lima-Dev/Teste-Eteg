@@ -2,12 +2,40 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @import "@fontsource-variable/geist";
+@import url("https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300..900;1,300..900&family=JetBrains+Mono:wght@400;500&display=swap");
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
     --font-heading: var(--font-sans);
-    --font-sans: 'Geist Variable', sans-serif;
+    --font-sans: "Public Sans", system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", monospace;
+
+    /* Design tokens */
+    --color-bg: #eef1f5;
+    --color-surface: #ffffff;
+    --color-surface-2: #f7f9fc;
+    --color-surface-3: #f1f4f8;
+    --color-border-soft: #e3e8ef;
+    --color-border-strong: #d2d9e3;
+    --color-ink: #0e1726;
+    --color-ink-2: #475569;
+    --color-ink-3: #8a97a8;
+    --color-brand: #111927;
+    --color-brand-hover: #0b1019;
+    --color-accent: #2563eb;
+    --color-accent-hover: #1d4fd7;
+    --color-accent-weak: #eef4ff;
+    --color-accent-border: #cfe0ff;
+    --color-danger: #dc2626;
+    --color-danger-weak: #fef2f3;
+    --color-danger-border: #f6cdce;
+    --color-ok: #16a34a;
+    --radius-pill: 999px;
+    --shadow-xs: 0 1px 2px rgba(14,23,38,.05);
+    --shadow-soft: 0 1px 3px rgba(14,23,38,.07), 0 1px 2px rgba(14,23,38,.04);
+    --shadow-card: 0 6px 18px -6px rgba(14,23,38,.16), 0 2px 6px -2px rgba(14,23,38,.08);
+    --shadow-modal: 0 30px 64px -16px rgba(14,23,38,.34), 0 8px 22px -10px rgba(14,23,38,.22);
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -127,4 +155,10 @@
   html {
     @apply font-sans;
     }
+}
+
+.dotted-bg {
+  background:
+    radial-gradient(circle at 1px 1px, rgba(14,23,38,0.08) 1px, transparent 0) 0 0/22px 22px,
+    linear-gradient(180deg, #f3f6fa, #e9edf3);
 }
