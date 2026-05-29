@@ -6,7 +6,8 @@ import { createCustomerSchema, type CreateCustomerInput } from '@teste-eteg/shar
 import { api } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { User, IdCard, Mail, CheckCircle } from 'lucide-react'
+import { User, IdCard, Mail, CheckCircle, Lock } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import CenteredScreen from '@/components/layout/CenteredScreen'
 import BrandLogo from '@/components/brand/BrandLogo'
 import Field from '@/components/ui/field'
@@ -157,6 +158,16 @@ export default function RegisterPage() {
                         >
                             {isSubmitting ? 'Enviando...' : 'Enviar cadastro'}
                         </Button>
+
+                        <div className="flex justify-center pt-1">
+                            <Link
+                                to="/admin/login"
+                                className="flex items-center gap-1.5 text-[12px] text-ink-3 hover:text-ink transition-colors"
+                            >
+                                <Lock className="h-3 w-3" />
+                                Área administrativa
+                            </Link>
+                        </div>
                     </form>
                 </div>
             </div>
