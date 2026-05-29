@@ -10,10 +10,8 @@ dist/
 .DS_Store
 Thumbs.db
 
-# TypeScript / Build cache
 *.tsbuildinfo
 
-# Compiled prisma seed files
 apps/api/prisma/seed.js
 apps/api/prisma/seed.js.map
 apps/api/prisma/seed.d.ts
