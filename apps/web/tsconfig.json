@@ -7,7 +7,7 @@
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "outDir": "./dist",
-    "baseUrl": ".",
+    "rootDir": "./src",
     "paths": {
       "@/*": ["./src/*"],
       "@teste-eteg/shared": ["../../packages/shared/dist/index"]
