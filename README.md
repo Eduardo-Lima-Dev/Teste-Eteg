@@ -1,219 +1,306 @@
-# Teste ETEG — Sistema de Cadastro de Clientes
+# Teste Eteg — Sistema de Cadastro de Clientes
 
-Aplicação fullstack para cadastro de clientes com painel administrativo.
+Sistema fullstack para cadastro e gestão de clientes, com painel administrativo protegido por autenticação JWT. Desenvolvido como monorepo com NestJS, React e um pacote compartilhado de schemas de validação.
 
-## Stack
+**Ambiente de produção:** [http://13.58.24.149](http://13.58.24.149)
 
-| Camada   | Tecnologia                            |
-| -------- | ------------------------------------- |
-| Monorepo | pnpm workspaces + Turborepo           |
-| Backend  | NestJS + TypeScript + Prisma          |
-| Banco    | PostgreSQL                            |
-| Schemas  | Zod (compartilhado entre front/back)  |
-| Auth     | JWT em cookie httpOnly                |
-| Frontend | Vite + React + TypeScript + shadcn/ui |
-| Infra    | Docker + Docker Compose               |
+---
 
-## Estrutura
+## Sumário
 
-```text
+- [Sobre o Projeto](#sobre-o-projeto)
+- [Tecnologias](#tecnologias)
+- [Estrutura do Repositório](#estrutura-do-repositório)
+- [Pasta Docs](#pasta-docs)
+- [Funcionalidades](#funcionalidades)
+- [Endpoints da API](#endpoints-da-api)
+- [Variáveis de Ambiente](#variáveis-de-ambiente)
+- [Como Rodar](#como-rodar)
+  - [Com Docker (recomendado)](#com-docker-recomendado)
+  - [Sem Docker](#sem-docker)
+- [Decisões Técnicas](#decisões-técnicas)
+
+---
+
+## Sobre o Projeto
+
+O projeto nasceu do seguinte pedido de um cliente:
+
+> *"Gostaria de uma tela onde eu possa cadastrar informações dos meus clientes: nome completo, CPF, e-mail, cor preferida e observações. O cliente precisa preencher o formulário uma única vez e saber se o cadastro foi bem-sucedido. O sistema vai ser hospedado via Docker em um serviço terceirizado."*
+
+A partir desse briefing foi elaborado um PRD completo (disponível em [`Docs/Requisitos.md`](Docs/Requisitos.md)) definindo os requisitos funcionais, não funcionais, fluxos de interação e a stack técnica antes de qualquer linha de código.
+
+---
+
+## Tecnologias
+
+| Camada | Tecnologia |
+|--------|-----------|
+| Frontend | React 19, Vite, TypeScript, Tailwind CSS v4, shadcn/ui |
+| Backend | NestJS 11, TypeScript |
+| Banco de Dados | PostgreSQL 16 |
+| ORM | Prisma 7 |
+| Validação | Zod (compartilhado entre frontend e backend) |
+| Autenticação | JWT via cookie `httpOnly` |
+| Infra | Docker, Docker Compose, Nginx |
+| Monorepo | pnpm workspaces, Turborepo |
+| CI/CD | GitHub Actions, Amazon ECR, EC2 |
+
+---
+
+## Estrutura do Repositório
+
+```
 Teste-Eteg/
 ├── apps/
-│   ├── api/        # Backend NestJS (porta 3333)
-│   └── web/        # Frontend React/Vite (porta 5173)
+│   ├── api/                    # Backend NestJS (porta 3333)
+│   │   ├── src/
+│   │   │   ├── auth/           # Módulo de autenticação (JWT + Passport)
+│   │   │   ├── customers/      # Módulo de clientes (CRUD)
+│   │   │   ├── colors/         # Módulo de cores (CRUD)
+│   │   │   ├── health/         # Health check endpoint
+│   │   │   └── prisma/         # Módulo de acesso ao banco
+│   │   ├── prisma/
+│   │   │   ├── schema.prisma   # Modelos: Customer, Color, AdminUser
+│   │   │   └── seed.ts         # Seed de cores padrão e usuário admin
+│   │   └── Dockerfile          # Multi-stage: deps → build → runtime
+│   │
+│   └── web/                    # Frontend React/Vite (porta 5173 dev / 80 prod)
+│       ├── src/
+│       │   ├── pages/
+│       │   │   ├── public/     # Formulário de cadastro (/)
+│       │   │   └── admin/      # Login (/admin/login) e painel (/admin)
+│       │   ├── components/
+│       │   │   ├── ui/         # Componentes base (shadcn/ui + customizados)
+│       │   │   ├── admin/      # CustomerCard, ColorsModal, StatPill
+│       │   │   └── layout/     # PanelHeader, CenteredScreen
+│       │   └── lib/            # Cliente HTTP (Axios com baseURL e cookies)
+│       ├── nginx.conf           # Proxy reverso /api/ → backend
+│       └── Dockerfile          # Multi-stage: build (Vite) → runner (Nginx)
+│
 ├── packages/
-│   └── shared/     # Schemas Zod e tipos compartilhados
-├── docker-compose.yml
-└── Docs/
-    └── Teste ETEG.yaml  # Coleção Insomnia para testar a API
-```
-
-## Pré-requisitos
-
-- [Node.js 20+](https://nodejs.org/)
-- [pnpm 11+](https://pnpm.io/installation)
-- [Docker + Docker Compose](https://docs.docker.com/get-docker/)
-
-Verificar versões:
-
-```bash
-node --version   # >= 20
-pnpm --version   # >= 11
-docker --version
+│   └── shared/                 # Pacote interno compartilhado
+│       └── src/
+│           ├── schemas/        # Zod: customer, color, auth, common
+│           └── lib/cpf.ts      # Validação matemática de CPF (dígitos verificadores)
+│
+├── Docs/                       # Especificação e referências visuais
+├── docker-compose.yml          # Orquestra postgres + api + web
+├── .env.example                # Template de variáveis de ambiente
+├── pnpm-workspace.yaml
+└── turbo.json
 ```
 
 ---
 
-## Rodar com Docker (recomendado)
+## Pasta Docs
 
-Sobe banco, backend e frontend com um único comando.
+A pasta [`Docs/`](Docs/) contém os artefatos produzidos **antes** da implementação, registrando o pensamento inicial sobre o sistema:
 
-### 1. Clone o repositório
+| Arquivo | Descrição |
+|---------|-----------|
+| [`Requisitos.md`](Docs/Requisitos.md) | PRD completo: requisitos funcionais, não funcionais, endpoints, modelos de dados e fluxos de interação (Mermaid) |
+| `Modelo.svg` | Wireframe das telas — referência visual usada para guiar o desenvolvimento do frontend |
+
+Esses documentos vieram do contato inicial do projeto e servem de referência para qualquer equipe que der continuidade ao desenvolvimento.
+
+---
+
+## Funcionalidades
+
+### Formulário Público (`/`)
+- Cadastro de clientes com nome, CPF, e-mail, cor preferida e observações
+- Validação em tempo real (Zod + React Hook Form) com destaque visual por campo
+- Máscara automática de CPF com validação matemática dos dígitos verificadores
+- Tela de confirmação após envio bem-sucedido (impede reenvio duplicado)
+- Erros da API (CPF ou e-mail já cadastrado) exibidos via toast
+
+### Painel Administrativo (`/admin`)
+- Autenticação por e-mail e senha com JWT em cookie `httpOnly`
+- Lista paginada de clientes com busca por nome, CPF ou e-mail
+- Modal de detalhes com todas as informações do cadastro
+- Gerenciamento de cores: color picker interativo, sugestão automática de nome, exclusão com confirmação
+- Stats no topo: total de clientes, cores disponíveis e cadastros da semana
+
+---
+
+## Endpoints da API
+
+### Clientes
+
+| Método | Rota | Auth | Descrição |
+|--------|------|------|-----------|
+| `POST` | `/customers` | Não | Cria um novo cadastro (público) |
+| `GET` | `/customers` | JWT | Lista clientes (`?search=`, `?page=`, `?limit=`) |
+| `GET` | `/customers/:id` | JWT | Detalhes de um cliente |
+
+### Cores
+
+| Método | Rota | Auth | Descrição |
+|--------|------|------|-----------|
+| `GET` | `/colors` | Não | Lista cores disponíveis |
+| `POST` | `/colors` | JWT | Cadastra uma nova cor |
+| `DELETE` | `/colors/:id` | JWT | Remove cor (retorna `409` se houver clientes vinculados) |
+
+### Autenticação
+
+| Método | Rota | Auth | Descrição |
+|--------|------|------|-----------|
+| `POST` | `/auth/login` | Não | Autentica e retorna JWT em cookie `httpOnly` |
+| `POST` | `/auth/logout` | JWT | Encerra sessão e limpa o cookie |
+
+### Sistema
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| `GET` | `/health` | Liveness check — usado pelo Docker para monitorar os containers |
+
+---
+
+## Variáveis de Ambiente
+
+Copie o arquivo de exemplo e preencha os valores:
 
 ```bash
-git clone <url-do-repo>
+cp .env.example .env
+```
+
+| Variável | Descrição |
+|----------|-----------|
+| `POSTGRES_USER` | Usuário do banco de dados |
+| `POSTGRES_PASSWORD` | Senha do banco de dados |
+| `POSTGRES_DB` | Nome do banco de dados |
+| `JWT_SECRET` | Chave secreta para assinar os tokens JWT (use uma string longa e aleatória) |
+| `JWT_EXPIRES_IN` | Tempo de expiração do token (ex.: `8h`) |
+| `ADMIN_EMAIL` | E-mail do administrador criado automaticamente pelo seed |
+| `ADMIN_PASSWORD` | Senha do administrador criado automaticamente pelo seed |
+| `CORS_ORIGIN` | Origem permitida pelo CORS (ex.: `http://localhost`) |
+
+---
+
+## Como Rodar
+
+### Com Docker (recomendado)
+
+Pré-requisitos: [Docker](https://docs.docker.com/get-docker/) e Docker Compose.
+
+```bash
+# 1. Clone o repositório
+git clone <url-do-repositorio>
 cd Teste-Eteg
-```
 
-### 2. Configure as variáveis de ambiente
+# 2. Configure as variáveis de ambiente
+cp .env.example .env
+# Edite o .env com seus valores
 
-```bash
-cp apps/api/.env.example apps/api/.env
-```
-
-Edite `apps/api/.env` e preencha os campos obrigatórios:
-
-```env
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/eteg?schema=public"
-JWT_SECRET="escolha-uma-chave-secreta-longa"
-JWT_EXPIRES_IN="8h"
-CORS_ORIGIN="http://localhost:8080"
-PORT=3333
-ADMIN_EMAIL="admin@eteg.com.br"
-ADMIN_PASSWORD="suasenha"
-```
-
-### 3. Suba os containers
-
-```bash
+# 3. Suba todos os serviços
 docker compose up --build
 ```
 
-### 4. Acesse
+O Docker Compose sobe três serviços em ordem:
 
-| Serviço  | URL                                  |
-| -------- | ------------------------------------ |
-| Frontend | <http://localhost:8080>              |
-| API      | <http://localhost:3333>              |
-| Health   | <http://localhost:3333/health>       |
+1. **postgres** — banco de dados PostgreSQL
+2. **api** — backend NestJS (executa migrations e seed automaticamente na primeira inicialização)
+3. **web** — frontend React servido pelo Nginx, que faz proxy de `/api/` para o backend
 
-> O seed (cores do arco-íris + admin) roda automaticamente na primeira inicialização.
+| Serviço | URL |
+|---------|-----|
+| Frontend | [http://localhost](http://localhost) |
+| API | [http://localhost:3333](http://localhost:3333) |
+| Health | [http://localhost:3333/health](http://localhost:3333/health) |
+
+Para reconstruir um serviço específico sem derrubar os outros:
+
+```bash
+docker compose up --build web   # só o frontend
+docker compose up --build api   # só o backend
+```
 
 ---
 
-## Rodar localmente (sem Docker)
+### Sem Docker
 
-### 1. Clone e instale dependências
+Pré-requisitos: [Node.js 22+](https://nodejs.org/), [pnpm 11+](https://pnpm.io/) e PostgreSQL rodando localmente.
 
 ```bash
-git clone <url-do-repo>
+# 1. Clone e instale as dependências
+git clone <url-do-repositorio>
 cd Teste-Eteg
 pnpm install
-```
 
-### 2. Suba o PostgreSQL
+# 2. Configure as variáveis de ambiente
+cp .env.example .env
+# Aponte DATABASE_URL para o seu banco local
 
-Via Docker (só o banco):
+# 3. Build do pacote compartilhado
+pnpm --filter @teste-eteg/shared run build
 
-```bash
-docker run -d \
-  --name eteg-postgres \
-  -e POSTGRES_PASSWORD=postgres \
-  -e POSTGRES_DB=eteg \
-  -p 5432:5432 \
-  postgres:16-alpine
-```
+# 4. Execute as migrations e o seed
+pnpm --filter @teste-eteg/api exec prisma migrate deploy
+pnpm --filter @teste-eteg/api exec prisma db seed
 
-Ou use uma instância local do PostgreSQL na porta 5432.
-
-### 3. Configure o backend
-
-```bash
-cp apps/api/.env.example apps/api/.env
-```
-
-Edite `apps/api/.env`:
-
-```env
-DATABASE_URL="postgresql"
-JWT_SECRET="escolha-uma-chave-secreta-longa"
-JWT_EXPIRES_IN="8h"
-CORS_ORIGIN="http://localhost:5173"
-PORT=3333
-ADMIN_EMAIL=""
-ADMIN_PASSWORD=""
-```
-
-### 4. Prepare o banco
-
-```bash
-cd apps/api
-npx prisma generate
-npx prisma migrate dev
-npx prisma db seed
-cd ../..
-```
-
-### 5. Build do pacote compartilhado
-
-```bash
-pnpm --filter @teste-eteg/shared build
-```
-
-### 6. Inicie os servidores
-
-Em terminais separados:
-
-```bash
-# Terminal 1 — Backend
-cd apps/api
-pnpm run dev
-```
-
-```bash
-# Terminal 2 — Frontend
-cd apps/web
-pnpm run dev
-```
-
-Ou da raiz com Turborepo (inicia tudo junto):
-
-```bash
+# 5. Inicie os serviços em modo desenvolvimento
 pnpm dev
 ```
 
-URLs em desenvolvimento:
+Ou em terminais separados:
 
-| Serviço  | URL                     |
-| -------- | ----------------------- |
-| Frontend | <http://localhost:5173> |
-| API      | <http://localhost:3333> |
+```bash
+# Terminal 1 — Backend (http://localhost:3333)
+pnpm --filter @teste-eteg/api run dev
 
----
+# Terminal 2 — Frontend (http://localhost:5173)
+pnpm --filter @teste-eteg/web run dev
+```
 
-## Credenciais do admin
-
-| Campo  | Valor                                  |
-| ------ | -------------------------------------- |
-| E-mail | Definido em `ADMIN_EMAIL` no `.env`    |
-| Senha  | Definido em `ADMIN_PASSWORD` no `.env` |
+> Em desenvolvimento o frontend acessa a API diretamente em `localhost:3333`. Em produção o Nginx faz o proxy internamente.
 
 ---
 
-## Testando a API
+## Decisões Técnicas
 
-Importe o arquivo `Docs/Teste ETEG.yaml` no [Insomnia](https://insomnia.rest/):
+### Monorepo com pnpm workspaces + Turborepo
 
-`Application → Import → From File` → selecione `Docs/Teste ETEG.yaml`
+Frontend, backend e o pacote shared coexistem no mesmo repositório. O Turborepo garante a ordem correta dos builds — o `shared` é compilado primeiro, depois `api` e `web` em paralelo — e aproveita cache entre execuções para evitar rebuilds desnecessários.
 
-O ambiente já vem configurado com `base_url: http://localhost:3333`. O cookie JWT é salvo automaticamente após o login.
+### Pacote `shared` com schemas Zod
 
-Fluxo básico:
+Os schemas de validação vivem em `packages/shared` e são importados tanto pelo backend quanto pelo frontend. Isso cria uma única fonte de verdade: o mesmo schema que valida um campo no formulário React valida o body da requisição no NestJS. Divergências de validação entre as duas camadas se tornam impossíveis.
 
-1. `POST /auth/login` — autentica e seta o cookie
-2. `GET /colors` — lista as cores disponíveis
-3. `POST /customers` — cadastra um cliente (público)
-4. `GET /customers` — lista cadastros (requer auth)
-5. `POST /auth/logout` — encerra a sessão
+### JWT em cookie `httpOnly`
 
----
+O token de autenticação é armazenado em um cookie `httpOnly`, inacessível via `document.cookie` ou `localStorage`. Isso elimina a classe inteira de ataques XSS que roubam tokens de autenticação. O cookie é enviado automaticamente pelo navegador em cada requisição protegida.
 
-## Decisões de arquitetura
+### Validação matemática de CPF
 
-- **Schemas Zod em `packages/shared`** — validação única compartilhada entre backend (NestJS via `nestjs-zod`) e frontend (`react-hook-form` + `zodResolver`). Mudanças nas regras de validação são feitas em um único lugar.
+A validação em `packages/shared/src/lib/cpf.ts` implementa o algoritmo real de dígitos verificadores. Um CPF como `111.111.111-11` passa na validação de formato mas falha na validação matemática — e é rejeitado corretamente pelo sistema.
 
-- **Escopo seguido:** implementação baseada no `Docs/Requisitos.md`. A coleção Insomnia contém rotas extras (`PUT /customers`, `DELETE /customers`) que não fazem parte do PRD e não foram implementadas.
+### Nginx como reverse proxy
 
-- **Cookie httpOnly para JWT** — o token não é acessível via JavaScript, protegendo contra XSS. Requer `credentials: true` no CORS e `withCredentials: true` nas requisições do frontend.
+Em produção, o React é uma SPA estática servida pelo Nginx. O mesmo servidor faz proxy de `/api/` para o backend na porta 3333. Com isso, frontend e API respondem na mesma origem, eliminando a necessidade de configuração de CORS em produção.
 
-- **Prisma 7 com adapter** — o Prisma 7 exige um adapter explícito (`@prisma/adapter-pg`) para conexão com o banco, diferente de versões anteriores que liam a `DATABASE_URL` diretamente.
+### Docker multi-stage builds
+
+Os Dockerfiles separam build e runtime em múltiplos estágios:
+
+- **API:** `deps` (instala tudo) → `build` (compila TS, gera cliente Prisma, executa `pnpm deploy --legacy` para isolar dependências de produção) → `runtime` (apenas o necessário para rodar)
+- **Web:** `build` (compila com Vite) → `runner` (Nginx com os arquivos estáticos)
+
+O resultado são imagens enxutas sem código-fonte, devDependencies ou ferramentas de build no container final.
+
+### Rate limiting com `@nestjs/throttler`
+
+O ThrottlerModule aplica dois níveis de proteção:
+
+- **Global:** 100 requisições por minuto por IP em todas as rotas
+- **Login:** 5 requisições por minuto no `POST /auth/login`, protegendo contra ataques de força bruta
+
+### CI/CD com GitHub Actions + Amazon ECR
+
+O pipeline automatiza o ciclo completo:
+
+1. Push na branch `main` (ou trigger manual) aciona o workflow
+2. As imagens Docker são construídas e publicadas no Amazon ECR
+3. A instância EC2 faz pull das novas imagens e reinicia os serviços via SSH
+
+Qualquer merge na `main` chega ao ambiente de produção sem intervenção manual.
