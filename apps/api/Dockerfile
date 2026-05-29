@@ -26,26 +26,38 @@ RUN pnpm --filter @teste-eteg/shared run build
 RUN pnpm --filter @teste-eteg/api exec prisma generate
 RUN pnpm --filter @teste-eteg/api run build
 
+# Compila seed.ts → seed.js e corrige path para o cliente compilado em dist/
+RUN node <<'SCRIPT'
+const ts = require('./apps/api/node_modules/typescript');
+const fs = require('fs');
+const src = fs.readFileSync('./apps/api/prisma/seed.ts', 'utf8');
+const { outputText } = ts.transpileModule(src, {
+  compilerOptions: { module: ts.ModuleKind.CommonJS, esModuleInterop: true }
+});
+const patched = outputText.replace(
+  /require\(["']\.\.\/src\/generated\/prisma\/client["']\)/g,
+  'require("../dist/generated/prisma/client")'
+);
+fs.writeFileSync('./apps/api/prisma/seed.js', patched);
+SCRIPT
+
+# Cria node_modules de produção: flat, sem devDeps, sem pnpm virtual store
+RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
+    pnpm --filter @teste-eteg/api deploy --legacy /app/prod
+
 FROM node:22-alpine AS runtime
 WORKDIR /app
 
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-COPY --from=build /app/node_modules                  ./node_modules
-COPY --from=build /app/apps/api/dist                 ./apps/api/dist
-COPY --from=build /app/apps/api/node_modules         ./apps/api/node_modules
-COPY --from=build /app/apps/api/prisma               ./apps/api/prisma
-COPY --from=build /app/apps/api/prisma.config.ts     ./apps/api/prisma.config.ts
-COPY --from=build /app/apps/api/package.json         ./apps/api/package.json
-COPY --from=build /app/packages/shared/package.json  ./packages/shared/package.json
-COPY --from=build /app/packages/shared/dist          ./packages/shared/dist
-COPY --from=build /app/packages/shared/node_modules  ./packages/shared/node_modules
-COPY --from=build /app/apps/api/src/generated        ./apps/api/src/generated
+COPY --from=build /app/prod/node_modules         ./node_modules
+COPY --from=build /app/apps/api/dist             ./dist
+COPY --from=build /app/apps/api/prisma           ./prisma
+COPY --from=build /app/apps/api/prisma.config.ts ./prisma.config.ts
+COPY --from=build /app/apps/api/package.json     ./package.json
 
 USER appuser
 
 EXPOSE 3333
 
-WORKDIR /app/apps/api
-
-CMD ["sh", "-c", "./node_modules/.bin/prisma migrate deploy && ./node_modules/.bin/tsx prisma/seed.ts && node dist/main"]
+CMD ["sh", "-c", "node_modules/.bin/prisma migrate deploy && node prisma/seed.js && node dist/main"]
