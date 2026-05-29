@@ -7,20 +7,30 @@ import { Prisma } from '../generated/prisma/client'
 export class CustomersService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(search?: string) {
-    return this.prisma.customer.findMany({
-      where: search
-        ? {
+  async findAll(search?: string, page = 1, limit = 10) {
+    const skip = (page - 1) * limit
+    const where = search
+      ? {
           OR: [
-            { name: { contains: search, mode: 'insensitive' }},
-            { cpf: { contains: search }},
-            { email: { contains: search, mode: 'insensitive' }}
+            { name: { contains: search, mode: 'insensitive' as const } },
+            { cpf: { contains: search } },
+            { email: { contains: search, mode: 'insensitive' as const } },
           ],
         }
-      : undefined,
-    include: { color: true },
-    orderBy: { createdAt: 'desc' } 
-    })
+      : undefined
+
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.customer.findMany({
+        where,
+        skip,
+        take: limit,
+        include: { color: true },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.customer.count({ where }),
+    ])
+
+    return { data, total, page, limit }
   }
 
   async findOne(id: number) {

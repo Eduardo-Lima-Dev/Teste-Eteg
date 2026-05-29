@@ -1,20 +1,14 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { CreateColorDto } from './dto/create-color.dto'
-import { Prisma, PrismaClient } from '../generated/prisma/client'
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/client'
+import { Prisma } from '../generated/prisma/client'
 
 @Injectable()
 export class ColorsService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(page = 1, limit = 10) {
-    const skip = (page - 1) * limit
-    const [data, total] = await this.prisma.$transaction([
-      this.prisma.color.findMany({skip, take: limit, orderBy: { name: 'asc' }}),
-      this.prisma.color.count()
-    ])
-    return { data, total, page, limit }
+  async findAll() {
+    return this.prisma.color.findMany({ orderBy: { name: 'asc' } })
   }
 
   async findOne(id: number) {

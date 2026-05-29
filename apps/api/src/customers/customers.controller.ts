@@ -9,8 +9,12 @@ export class CustomersController {
 
   @Get()
   @UseGuards(JwtAuthGuard)
-  findAll(@Query('search') search?: string) {
-    return this.customersService.findAll(search);
+  findAll(
+    @Query('search') search?: string,
+    @Query('page', new ParseIntPipe({ optional: true })) page?: number,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
+  ) {
+    return this.customersService.findAll(search, page, limit);
   }
 
   @Get(':id')

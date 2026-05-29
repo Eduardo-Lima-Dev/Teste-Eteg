@@ -4,7 +4,6 @@ import {
   Post,
   Body,
   Param,
-  Query,
   UseGuards,
   ParseIntPipe,
   Delete as HttpDelete,
@@ -18,11 +17,8 @@ export class ColorsController {
   constructor(private readonly colorsService: ColorsService) {}
 
   @Get()
-  findAll(
-    @Query('page', new ParseIntPipe({ optional: true })) page?: number,
-    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
-  ) {
-    return this.colorsService.findAll(page, limit)
+  findAll() {
+    return this.colorsService.findAll()
   }
 
   @Get(':id')
