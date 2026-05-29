@@ -230,7 +230,6 @@ pnpm install
 
 # 2. Configure as variáveis de ambiente
 cp .env.example .env
-# Aponte DATABASE_URL para o seu banco local
 
 # 3. Build do pacote compartilhado
 pnpm --filter @teste-eteg/shared run build
